@@ -130,6 +130,14 @@ client = openai.AsyncOpenAI(
     timeout=900,
 )
 
+def should_continue_work(text, left, margin):
+  """Generic guard: an announced next action is not a completed task."""
+  if not text or left is None or left <= 4 * margin:
+    return False
+  return bool(re.search(
+      r"\b(let me|i will|i'll|next i|need to debug|need to implement|still need to)\b",
+      text, re.I))
+
 SYSTEM = """You are an expert engineer working on a task in a Linux container. Your tools act inside it: bash (it \
 starts in {workdir}), read_file, write_file and edit_file. The container has no internet access.{mcp}
 
@@ -157,7 +165,14 @@ Engineering discipline (always):
 5. Keep a short assumptions list and state it in the deliverable where a reviewer would expect it.
 6. Leave time to finish: when time is short, make sure every deliverable exists and is valid before refining any of them.
 """
-SYSTEM = SYSTEM + ENGINEERING_POLICY
+SYSTEM = SYSTEM + ENGINEERING_POLICY + """
+Deliverable-first workflow: after reading the task and output contract, create a
+first version of the actual requested output at its required destination before
+spending many turns optimizing. Scratch scripts and plans are not deliverables.
+Keep refining that real output. Before finishing, use tools to check that the
+requested files exist, differ from supplied placeholders, and can be opened.
+Do not finish with promises such as 'let me debug' or 'I will implement'.
+"""
 
 
 MCP_DIRECT = """
@@ -943,6 +958,13 @@ class Agent:
       if text:
         self.session.final_message = text
       if not reply.calls:
+        if should_continue_work(visible(reply.text), left, self.finish_margin):
+          self.messages.append({"role": "user", "content": (
+              "Your answer describes unfinished work, not completion. Execute"
+              " that next action using tools now. Write the best available"
+              " requested deliverable at its required path before improving it."
+              " Do not end with a plan or a debugging announcement.")})
+          continue
         if not visible(reply.text) and reply.finish == "length" and self.output_ceiling < int(os.environ.get("OUTPUT_GROW_MAX", "4000")):
           self.output_ceiling = min(int(os.environ.get("OUTPUT_GROW_MAX", "4000")), self.output_ceiling + 1000)
           continue
