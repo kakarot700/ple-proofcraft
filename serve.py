@@ -1442,6 +1442,9 @@ class Agent:
           stream=True,
           stream_options={"include_usage": True},
           **self.effort,
+          **({"extra_body": {"chat_template_kwargs": {
+              "enable_thinking": os.environ["ENABLE_THINKING"].lower() == "true"
+          }}} if "ENABLE_THINKING" in os.environ else {}),
           **{self.token_limit: self.max_output},
       )
       async for chunk in stream:
@@ -1612,19 +1615,18 @@ class Agent:
         return clip(await server.call(t["name"], args))
       if name == "mcp_find":
         return self.find_mcp(str(args.get("query", "")))
-      if name in ("write_file", "edit_file"):
-        self.wrote = True
       handler = {
           "bash": self.bash,
           "read_file": self.read_file,
           "write_file": self.write_file,
           "edit_file": self.edit_file,
       }.get(name)
-      return (
-          clip(await handler(**args))
-          if handler
-          else f"error: there is no tool named {name}"
-      )
+      if not handler:
+        return f"error: there is no tool named {name}"
+      result = clip(await handler(**args))
+      if name in ("write_file", "edit_file") and not result.lstrip().lower().startswith("error:"):
+        self.wrote = True
+      return result
     except taskbridge.TaskError as exc:
       return f"error: {exc}"
     except (
