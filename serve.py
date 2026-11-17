@@ -592,6 +592,19 @@ def chat_usage(usage: Any) -> Any:
   )
 
 
+VERIFY_PROMPT = (
+    "Before you finish, verify every deliverable with an independent check"
+    " whose own output would show a failure. A message you print yourself is"
+    " not a check, and never write that something passed unless a tool's"
+    " output shows it. Use the file format's own validator where one exists:"
+    " for IFC run `python3 -m ifcopenshell.validate --rules <file>` (schema"
+    " and EXPRESS rules) and fix every error it lists, then run it again;"
+    " parse JSON, CSV or XML back with a real parser; open generated drawings,"
+    " spreadsheets or PDFs with their library and read the values back. Check"
+    " every number and name the task asks for against its source. Fix what"
+    " fails and rerun until clean, then report only what the checks showed."
+)
+
 class MCPServer(taskbridge.MCPClient):
   """Client wrapper for a single task MCP server and its discovered tools."""
 
@@ -906,6 +919,7 @@ class Agent:
     # head: the text of an answer cut off at the output limit
     nudges, head = 0, ""
     tool_count, gate_pushes, progress_pushes, hard_pushes = 0, 0, 0, 0
+    verify_pushes = 0
     start_left = self.session.time_left()
     while True:
       left = self.session.time_left()
@@ -984,6 +998,10 @@ class Agent:
         if visible(reply.text) and gate_pushes < int(os.environ.get("GATE_PUSHES", "6")) and (tool_count < 12 or (left is not None and start_left and left > float(os.environ.get("GATE_TIME_FRACTION", "0.5")) * start_left)) and (left is None or left > 4 * self.finish_margin):
           gate_pushes += 1
           self.messages.append({"role": "user", "content": "You stopped calling tools, but plenty of time remains. If your last message said what you will do next, do it now with the tools. Before finishing, inspect every requested deliverable against the task: a placeholder is not a completed deliverable, and a partial deliverable written to the required path beats none. Build, write and validate the required files. If something genuinely cannot be completed, write your best version anyway and report the gaps honestly." + (f" [{int(left // 60)} minutes left]" if left is not None else "")})
+          continue
+        if visible(reply.text) and verify_pushes < int(os.environ.get("VERIFY_PUSHES", "2")) and (left is None or left > 4 * self.finish_margin):
+          verify_pushes += 1
+          self.messages.append({"role": "user", "content": VERIFY_PROMPT + (f" [{int(left // 60)} minutes left]" if left is not None else "")})
           continue
         if visible(reply.text) or nudges >= 2:
           return text or self.session.final_message
