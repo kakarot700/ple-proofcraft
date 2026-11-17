@@ -891,6 +891,7 @@ class Agent:
     # head: the text of an answer cut off at the output limit
     nudges, head = 0, ""
     tool_count, gate_pushes, progress_pushes, hard_pushes = 0, 0, 0, 0
+    start_left = self.session.time_left()
     while True:
       left = self.session.time_left()
       if left is not None and left < self.finish_margin:
@@ -958,9 +959,9 @@ class Agent:
               ),
           })
           continue
-        if visible(reply.text) and gate_pushes < 2 and tool_count < 12 and (left is None or left > 4 * self.finish_margin):
+        if visible(reply.text) and gate_pushes < int(os.environ.get("GATE_PUSHES", "6")) and (tool_count < 12 or (left is not None and start_left and left > float(os.environ.get("GATE_TIME_FRACTION", "0.5")) * start_left)) and (left is None or left > 4 * self.finish_margin):
           gate_pushes += 1
-          self.messages.append({"role": "user", "content": "Before finishing, inspect every requested deliverable against the task. A placeholder is not a completed deliverable. Use the available tools to build and validate the required content. If something genuinely cannot be completed, report it honestly."})
+          self.messages.append({"role": "user", "content": "You stopped calling tools, but plenty of time remains. If your last message said what you will do next, do it now with the tools. Before finishing, inspect every requested deliverable against the task: a placeholder is not a completed deliverable, and a partial deliverable written to the required path beats none. Build, write and validate the required files. If something genuinely cannot be completed, write your best version anyway and report the gaps honestly." + (f" [{int(left // 60)} minutes left]" if left is not None else "")})
           continue
         if visible(reply.text) or nudges >= 2:
           return text or self.session.final_message
