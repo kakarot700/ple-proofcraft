@@ -890,7 +890,7 @@ class Agent:
     ]
     # head: the text of an answer cut off at the output limit
     nudges, head = 0, ""
-    tool_count, gate_pushes, progress_pushes = 0, 0, 0
+    tool_count, gate_pushes, progress_pushes, hard_pushes = 0, 0, 0, 0
     while True:
       left = self.session.time_left()
       if left is not None and left < self.finish_margin:
@@ -904,8 +904,26 @@ class Agent:
             " first version now at the exact path the task names, then keep"
             " improving it with the time left. An unwritten deliverable scores"
             " zero; a working first version can only be improved.")})
+      hard_at = int(os.environ.get("HARD_WRITE_AT", "30"))
+      forced = False
+      if (hard_at and tool_count >= hard_at * (hard_pushes + 1)
+          and not getattr(self, "wrote", False) and hard_pushes < 3):
+        hard_pushes += 1
+        forced = True
+        saved_tools = self.tools
+        self.tools = [t for t in saved_tools
+                      if t.get("function", {}).get("name") in ("write_file", "edit_file")]
+        self.messages.append({"role": "user", "content": (
+            f"{tool_count} tool calls and no file written yet. This turn only"
+            " write_file is available: write a complete first version of the"
+            " required deliverable now, at the exact path the task names,"
+            " from what you already know. You can refine it afterwards.")})
       try:
-        reply = await self.complete(head=head)
+        try:
+          reply = await self.complete(head=head, **({"tool_choice": "required"} if forced else {}))
+        finally:
+          if forced:
+            self.tools = saved_tools
       except OutOfTime:
         return await self.finish(
             "Time is almost up, and the model is not answering."
@@ -1594,6 +1612,8 @@ class Agent:
         return clip(await server.call(t["name"], args))
       if name == "mcp_find":
         return self.find_mcp(str(args.get("query", "")))
+      if name in ("write_file", "edit_file"):
+        self.wrote = True
       handler = {
           "bash": self.bash,
           "read_file": self.read_file,
