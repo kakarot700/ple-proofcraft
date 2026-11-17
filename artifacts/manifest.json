@@ -1,0 +1,38 @@
+{
+  "format": 1,
+  "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
+  "created": "2026-11-17T23:16:22Z",
+  "harness": {
+    "name": "proofcraft-engineering",
+    "model_api": "google-cloud/gemini-3.8-flash",
+    "tree": "d4488a60f0a37f2230fa03914248ed301440def054da12404dda5c5c8a9e7830",
+    "files": {
+      ".gitignore": "100644 8fd77f6fac0b757bc0a865576d770bfd135f8016",
+      "LICENSE": "100644 261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "live_smoke.py": "100644 71983ad23e00005ef447c0fc36cc3482797fa632",
+      "requirements.txt": "100644 13ba6dbe5a230d71da63dd42ee49e86f580056dc",
+      "serve.py": "100644 33dfe229cc272bea7d7f908030e516ef8a945437",
+      "submission.yaml": "100644 062179c457b1bcdeb69fc0acbb9cf698ce448a3e",
+      "taskbridge.py": "100644 26cc3d6cf8dbcaed859731ce9a6881f4ca8bfe40",
+      "test_completion_guard.py": "100644 168c178d7ad9be440eb3d565acb04efe4e7dcd8f"
+    },
+    "commit": "b56a2abd9442cffa8ee08a98ba753a4d7096ed25",
+    "dirty": false
+  },
+  "tasks": {
+    "data-hall-mep-routing": {
+      "run": "n6-data-hall-mep-routing",
+      "trial": "data-hall-mep-routing__SbRstmk",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "d4488a60f0a37f2230fa03914248ed301440def054da12404dda5c5c8a9e7830",
+      "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
+      "files": {
+        "app/files/dc_model__hall_seed000_d000__mep_routing/output/solution.py": "c0ba5823025a2bb5bceb42580c712c58a1ce1a1d"
+      },
+      "final_message": "07e6df1fc28c8857d8ee0497b642dd9ec775f88f",
+      "deleted": [],
+      "skipped": []
+    }
+  }
+}
