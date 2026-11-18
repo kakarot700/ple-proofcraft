@@ -37,7 +37,7 @@ Both failures are path-and-format failures, which is why the harness now checks 
 
 ## Cross-model generalizability
 
-The same harness, the same memo task, two different NVIDIA models: 0.409 on Nemotron 3 Ultra 550B and 0.149 on Nemotron 3.5 Lightning 30B. The gates are model-agnostic by construction — they key on tool counts, elapsed time and file paths, never on the shape of the model's prose. What changed between the two models was how often the gates had to fire, not whether they worked.
+The same harness, the same memo task, two different NVIDIA models: 0.409 on Nemotron 3 Ultra 550B and 0.149 on Nemotron 3.5 Lightning 30B. The gates are model-agnostic by construction — they key on tool counts and elapsed time, never on the shape of the model's prose. What changed between the two models was how often the gates had to fire, not whether they worked.
 
 One honest caveat: the judge used for the two memo runs was not identical in provenance, so the 0.409 versus 0.149 gap is indicative of a capability difference, not a controlled ablation. I am not claiming a clean model comparison.
 
@@ -52,6 +52,6 @@ Scaling to the full 29-task dev set is a throughput problem, not a design one: e
 ## Limitations
 
 - Only two of the 29 dev tasks have produced artifacts. The dev score is a mean over 29, so it reads near zero even where a task scored 0.409.
-- The deliverable-path gate and the validator push are implemented and unit-tested but not yet validated by a re-run that converts a zero into a non-zero. That is the next experiment, and I would rather say so than imply otherwise.
+- Path discipline is enforced by instruction and by the verify push, not yet by a programmatic check that the declared deliverable exists before a final answer is accepted. That check is the next thing to build, and validating it by converting a zero into a non-zero is the next experiment. I would rather say so than imply otherwise.
 - Development ran on a sandbox that was reset repeatedly. Several runs (t4, t5, n1, n5) were lost mid-flight; their outcomes are unknown, and I have recorded them as unknown rather than as zeros.
 - The IFC work is one task family. The memo task exercises a different path (rubric judging rather than a programmatic verifier), and the harness behaves differently on each.
