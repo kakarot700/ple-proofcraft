@@ -15,7 +15,7 @@ An agent harness for Physical-Engineering's Last Exam. It speaks the kit's WebSo
 3. **Unfinished-answer gate.** A text-only reply is refused while more than half the time budget remains. The agent is told to act on what it just said and write a partial deliverable. Motivation: n4 ended after 21 minutes of a 6-hour budget with the sentence "No feasible layout found... Let me debug" and zero files.
 4. **Independent format validation before finishing.** Before a final answer is accepted, the harness pushes the agent to run the task's own validator (for IFC, `python3 -m ifcopenshell.validate --rules <file>`) and read the result back. Motivation: n6's final message claimed "validated" while the file carried 689 schema violations.
 
-Two transport-level remedies were needed before any of this could run on a free endpoint: dropping message fields an endpoint refuses (NVIDIA NIM rejects the `channel` field that gpt-oss echoes back), and parsing "try again in 31m31s" out of a 429 body so the harness waits the right length instead of retrying into the wall.
+Two transport-level remedies were needed before any of this could run on a free endpoint: dropping message fields an endpoint refuses (Groq rejected the `channel` field that gpt-oss echoes back), and parsing "try again in 31m31s" out of a 429 body so the harness waits the right length instead of retrying into the wall.
 
 ## The runs, honestly
 
@@ -33,7 +33,7 @@ The two zeros are the interesting ones, and they are different failures.
 
 **n7 was worse and more instructive.** The model produced a 1.0 MB IFC, a reconciliation JSON and a 44 KB solution.py, then renamed model.ifc to model_final.ifc while tidying up. The grader read an empty path. The verifier reported ERR_CONNECTIVITY with all six rows unserved, while gate_1_no_hard_clash passed — the engineering was fine, the file was in the wrong place. No amount of reasoning quality survives that.
 
-Both failures are path-and-format failures, which is why the harness now checks declared deliverable paths and pushes the validator, rather than trying to make the model smarter.
+Both failures are path-and-format failures, which is why the harness now pushes the agent to validate the file and confirm the graded path before it may finish, rather than trying to make the model smarter.
 
 ## Cross-model generalizability
 
