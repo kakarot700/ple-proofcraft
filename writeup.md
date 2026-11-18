@@ -1,6 +1,6 @@
 # ProofCraft — gating an engineering agent on verified artifacts
 
-**Repo:** REPO_PLACEHOLDER · **Commit:** SHA_PLACEHOLDER
+**Repo:** https://github.com/kakarot700/ple-proofcraft · **Commit:** the 40-character SHA is stated at the top of the Kaggle Writeup (a file cannot contain its own commit hash)
 
 ## Headline finding
 
