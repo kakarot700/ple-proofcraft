@@ -1,0 +1,45 @@
+name: regrade
+on:
+  push:
+    branches: [regrade]
+  workflow_dispatch:
+permissions: {actions: read, contents: read}
+jobs:
+  regrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env: {SRC_RUN: "44689808066", TASKS: "engineers-estimate-check fire-solve-convergence solar-supplemental-review foundation-strategy"}
+    steps:
+      - name: free disk
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL; df -h /
+      - uses: actions/checkout@v4
+        with: {ref: main, path: pc, fetch-depth: 0}
+      - uses: actions/checkout@v4
+        with: {ref: regrade, path: cfg, sparse-checkout: ci}
+      - uses: astral-sh/setup-uv@v5
+      - name: download runs
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: |
+          for t in $TASKS; do gh run download $SRC_RUN -R ${{ github.repository }} -n run-$t -D runs/run-$t || echo "no artifact $t"; done
+          find runs -maxdepth 3 -name results.json
+      - name: kit + proxy
+        env: {NVIDIA_KEY: "${{ secrets.NVIDIA_KEY }}"}
+        run: |
+          git clone -q --depth 1 https://github.com/google-research/ple ple
+          pip install -q 'litellm[proxy]'
+          nohup litellm --config cfg/ci/nvproxy-regrade.yaml --host 0.0.0.0 --port 4000 > proxy.log 2>&1 &
+          for i in $(seq 60); do curl -s -o /dev/null http://localhost:4000/health/liveliness && break; sleep 3; done
+          uv tool install harbor==0.20.0 --with websockets
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: regrade
+        env: {HF_TOKEN: "${{ secrets.HF_TOKEN }}"}
+        run: |
+          printf 'MODEL_PROXY_URL=http://localhost:4000\nMODEL_PROXY_KEY=sk-local-ple-dev\nJUDGE_MODEL=kimi-k3.1-pro\nHF_TOKEN=%s\n' "$HF_TOKEN" > local.env
+          cd ple
+          for t in $TASKS; do echo "######## $t"; timeout 80m uv run python eval/run.py --regrade $GITHUB_WORKSPACE/runs/run-$t/$t --env-file $GITHUB_WORKSPACE/local.env 2>&1 | tee -a $GITHUB_WORKSPACE/regrade.log; done
+          true
+      - if: always()
+        run: cp regrade.log proxy.log runs/ 2>/dev/null; grep -c "nemotron-judge" proxy.log || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "regraded", path: runs/, retention-days: 90, include-hidden-files: true}
