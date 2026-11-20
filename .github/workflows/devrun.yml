@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 358
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 8
       matrix:
         task: [data-hall-mep-routing,fire-test-validation-memo,data-hall-mep-routing-offset,eor-review-corrections,foundation-strategy,landscape-sheet-revision,data-center-site-model,engineers-estimate-check,footing-settlement-verification,solar-supplemental-review,solar-witness-test-package,frame-extension-method,fire-solve-convergence,les-mesh-resolution,mv-conveyance-study,data-hall-device-takeoff,division-26-specifications,heat-rejection-life-cycle-cost,cooling-water-flush-plan,wind-diaphragm-shear,seismic-diaphragm-shear,roof-deck-design,fill-compaction-acceptance,shoring-design-verification,emergency-spillway-check,pre-application-capacity-response,permission-to-operate-memo,backfeed-energization-reply,lv-cable-sizing]
     steps:
@@ -29,9 +29,14 @@ jobs:
           for i in $(seq 60); do curl -s -o /dev/null http://localhost:4000/health/liveliness && break; sleep 3; done
           curl -s http://localhost:4000/v1/chat/completions -H 'Authorization: Bearer sk-local-ple-dev' -H 'Content-Type: application/json' -d '{"model":"gemini-3.8-flash","messages":[{"role":"user","content":"say ok"}],"max_tokens":20}' | head -c 400; echo
           docker version --format '{{.Server.Version}}'
+          uv tool install harbor==0.20.0 --with websockets
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          sleep $(( RANDOM % 120 ))
       - name: eval
         env: {HF_TOKEN: "${{ secrets.HF_TOKEN }}"}
         run: |
+          set -o pipefail
+          which harbor
           printf 'MODEL_PROXY_URL=http://localhost:4000\nMODEL_PROXY_KEY=sk-local-ple-dev\nJUDGE_MODEL=kimi-k3.1-pro\nHF_TOKEN=%s\n' "$HF_TOKEN" > local.env
           cd ple && timeout 340m uv run python eval/run.py $GITHUB_WORKSPACE/pc --tasks ${{ matrix.task }} --trials 2 --env-file $GITHUB_WORKSPACE/local.env --out $GITHUB_WORKSPACE/out/${{ matrix.task }} 2>&1 | tee $GITHUB_WORKSPACE/eval.log
       - if: always()
