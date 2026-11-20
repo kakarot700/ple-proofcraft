@@ -96,6 +96,15 @@ class Session:
         else []
     )
     budget = self.limits.get("agent_timeout_sec")
+    if not (isinstance(budget, (int, float)) and budget > 0):
+      # The platform may carry no agent time limit (the local dev eval does
+      # not). Without one the loop never finalises and the run is killed at
+      # the container's wall clock with nothing usable written, so the
+      # harness keeps its own budget and finishes inside it.
+      try:
+        budget = float(os.environ.get("DEFAULT_AGENT_BUDGET_SEC", "19800"))
+      except ValueError:
+        budget = 19800.0
     self.deadline = (
         time.monotonic() + budget
         if isinstance(budget, (int, float)) and budget > 0
