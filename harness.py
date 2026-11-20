@@ -147,6 +147,8 @@ How to work:
 - When the task says how the result is checked (a time limit, a format, a test), check it that way yourself.
 - Write each deliverable exactly where, under the name and in the format the task asks for. Write it early, then \
 improve it.
+- A relative path in the task (output/, submission/, a bare file name) is relative to the workspace {workdir}: \
+write output/x.docx as {workdir}/output/x.docx, never /app/output, /output or another folder.
 - Produce office and binary formats (docx, xlsx, pdf, ...) with code, such as python3 and the libraries in the \
 container, so they are real files of that format.
 - Before you finish, open every deliverable again and check that it is complete and readable.
@@ -891,6 +893,34 @@ class Agent:
     return bool(new)
 
   async def run(self) -> str:
+    """Runs the loop, then puts stray deliverables where the task reads them."""
+    try:
+      return await self.run_loop()
+    finally:
+      await self.place_outputs()
+
+  async def place_outputs(self) -> None:
+    """When the task reads `output/` in the workspace and it is empty, copies a
+    deliverable folder written at a wrong absolute path (/app/output, /output,
+    ~/output) into it. Never overwrites a file already there."""
+    if "output/" not in (self.session.instruction or ""):
+      return
+    w = self.session.workdir.rstrip("/") or ""
+    script = (
+        f'W="{w}/output"; [ -n "$(ls -A "$W" 2>/dev/null)" ] && exit 0; '
+        'for d in /app/output /output "$HOME/output" /tmp/output /root/output; do '
+        '[ "$(readlink -f "$d")" = "$(readlink -f "$W")" ] && continue; '
+        '[ -d "$d" ] && [ -n "$(ls -A "$d")" ] || continue; '
+        'mkdir -p "$W" && cp -an "$d"/. "$W"/ && echo "placed $d -> $W"; done'
+    )
+    try:
+      r = await self.session.exec(script, 30)
+      if (r.get("output") or "").strip():
+        await self.session.log(f"place_outputs: {r['output'].strip()[:300]}")
+    except Exception as exc:  # never let the guard break the run
+      await self.session.log(f"place_outputs failed: {exc}")
+
+  async def run_loop(self) -> str:
     """Runs the agent tool-calling loop until the task is complete.
 
     Returns:
