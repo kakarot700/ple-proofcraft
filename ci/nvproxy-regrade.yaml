@@ -1,0 +1,8 @@
+model_list:
+  - {model_name: gemini-3.8-flash, litellm_params: {model: openai/nvidia/nemotron-3-ultra-550b-a55b, api_base: "https://integrate.api.nvidia.com/v1", api_key: os.environ/NVIDIA_KEY, timeout: 600}}
+  - {model_name: kimi-k3.1-pro, litellm_params: {model: openai/moonshotai/kimi-k3.1-pro, api_base: "https://integrate.api.nvidia.com/v1", api_key: os.environ/NVIDIA_KEY, timeout: 300}}
+  - {model_name: kimi-k3.1-pro-judge, litellm_params: {model: openai/moonshotai/kimi-k3.1-pro, api_base: "https://integrate.api.nvidia.com/v1", api_key: os.environ/NVIDIA_KEY, timeout: 300}}
+  - {model_name: nemotron-judge, litellm_params: {model: openai/nvidia/nemotron-3-ultra-550b-a55b, api_base: "https://integrate.api.nvidia.com/v1", api_key: os.environ/NVIDIA_KEY, timeout: 400}}
+litellm_settings: {drop_params: true, num_retries: 1, request_timeout: 300}
+router_settings: {fallbacks: [{"kimi-k3.1-pro-judge": ["nemotron-judge"]}, {"kimi-k3.1-pro": ["nemotron-judge"]}]}
+general_settings: {master_key: sk-local-ple-dev}
