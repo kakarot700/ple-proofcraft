@@ -1,11 +1,11 @@
 {
   "format": 1,
   "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
-  "created": "2026-11-21T05:39:56Z",
+  "created": "2026-11-21T05:53:05Z",
   "harness": {
     "name": "proofcraft-engineering",
     "model_api": "google-cloud/gemini-3.8-flash",
-    "tree": "cd80c02c73476ba33df61e222d7886ec762a75f838a119ad7c27109aac3e8145",
+    "tree": "381fd58d99741f95927854607c9048f1120adc316ae5ca9cc55ce076e78e9d19",
     "files": {
       ".gitignore": "100644 8fd77f6fac0b757bc0a865576d770bfd135f8016",
       "LICENSE": "100644 261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
@@ -14,16 +14,16 @@
       "figures/fig1_architecture.png": "100644 a4320115d8e94e398f3b917cbb8585484d573284",
       "figures/fig2_score_vs_cost.png": "100644 5d86395471d8cc3279e61262590f45229b477151",
       "figures/fig3_failure_breakdown.png": "100644 230b46fd274e0cd34aefe7f7f244885a6d466353",
-      "harness.py": "100644 68a76c51260cb0bf2988aeb0a2606f3f0fd010e4",
+      "harness.py": "100644 93b03661ca055618405cd4bf555703fd196c4062",
       "live_smoke.py": "100644 71983ad23e00005ef447c0fc36cc3482797fa632",
       "requirements.txt": "100644 13ba6dbe5a230d71da63dd42ee49e86f580056dc",
       "serve.py": "100644 0427dabf9748e7a5a8982f653df1017c2c4b61d7",
       "submission.yaml": "100644 062179c457b1bcdeb69fc0acbb9cf698ce448a3e",
-      "taskbridge.py": "100644 0dd626b828344d0adb2286c16ef37f9542281217",
+      "taskbridge.py": "100644 26cc3d6cf8dbcaed859731ce9a6881f4ca8bfe40",
       "test_completion_guard.py": "100644 168c178d7ad9be440eb3d565acb04efe4e7dcd8f",
       "writeup.md": "100644 10df52b967ecda5218ef4dac60c4a2474c8a56d3"
     },
-    "commit": "775f64ab685299e5542522d0bb487f95d6b11142",
+    "commit": "46a5fbf94dc609ae73e8443d2867ed58e02530dd",
     "dirty": false
   },
   "tasks": {
@@ -449,16 +449,31 @@
       "skipped": []
     },
     "wind-diaphragm-shear": {
+      "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
       "run": "wind-diaphragm-shear",
       "trial": "wind-diaphragm-shear__XjKWmAA",
       "ended": "ok",
       "reward": 0.0,
       "tree": "cd80c02c73476ba33df61e222d7886ec762a75f838a119ad7c27109aac3e8145",
-      "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
       "files": {
         "filesystem/final_batch4__structural_task5_wind_diaphragm_shear__blind/output/submission.zip": "c7935acf4dabf1af2c38631ebce915e1f6cba629"
       },
       "final_message": "5db6d0e0ed6f37bdce16ce0df21a01544def296c",
+      "deleted": [],
+      "skipped": []
+    },
+    "les-mesh-resolution": {
+      "run": "les-mesh-resolution",
+      "trial": "les-mesh-resolution__cLJ7Y9y",
+      "ended": "ok; graded again from its deliverables",
+      "reward": 0.109756,
+      "tree": "381fd58d99741f95927854607c9048f1120adc316ae5ca9cc55ce076e78e9d19",
+      "dev_set": "85ad6d96fbf76ee64d9fb6339b3bf342b07128a2ebadc0a10f008c95dac01a48",
+      "files": {
+        "filesystem/CFDME-2025-041_resolution_note_revA.docx": "80c745b572974d4c502cb6f2a69ee76e53739a1d",
+        "filesystem/create_note.py": "2ec7c10e72cb802dc133d7a16cb88e1ceb712015"
+      },
+      "final_message": "48aa4941e275e837ae40e4c6bba49f0b74faee71",
       "deleted": [],
       "skipped": []
     }
