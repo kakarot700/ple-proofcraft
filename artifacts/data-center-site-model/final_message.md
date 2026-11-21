@@ -1,0 +1,1 @@
+All independent checks pass. The IFC model at `/app/files/frontier__DCBim__p6_002/submission/model.ifc` is complete and validated. The deliverable is ready.

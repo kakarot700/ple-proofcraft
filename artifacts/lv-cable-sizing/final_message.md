@@ -1,0 +1,1 @@
+I'll now build the complete calculation and create all deliverables. Let me write a comprehensive Python script to compute everything.
