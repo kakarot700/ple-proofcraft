@@ -1,7 +1,7 @@
-name: dev-eval-v4
+name: dev-eval-v5
 on:
   push:
-    branches: [devrun-v4]
+    branches: [devrun-v5]
   workflow_dispatch:
 permissions: {actions: read, contents: read}
 jobs:
@@ -12,11 +12,11 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        task: [engineers-estimate-check, fire-solve-convergence, solar-supplemental-review, solar-witness-test-package, les-mesh-resolution, fill-compaction-acceptance, foundation-strategy]
+        task: [engineers-estimate-check, fire-solve-convergence, solar-supplemental-review, solar-witness-test-package, fill-compaction-acceptance, shoring-design-verification, pre-application-capacity-response, foundation-strategy]
     steps:
       - run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - uses: actions/checkout@v4
-        with: {ref: devrun-v4, path: cfg, sparse-checkout: ci}
+        with: {ref: devrun-v5, path: cfg, sparse-checkout: ci}
       - uses: astral-sh/setup-uv@v5
       - name: download run
         env: {GH_TOKEN: "${{ github.token }}"}
@@ -26,10 +26,11 @@ jobs:
         run: |
           git clone -q --depth 1 https://github.com/google-research/ple ple
           pip install -q 'litellm[proxy]'
-          nohup litellm --config cfg/ci/nvproxy-regrade.yaml --host 0.0.0.0 --port 4000 > proxy.log 2>&1 &
+          nohup litellm --config cfg/ci/nvproxy-nemojudge.yaml --host 0.0.0.0 --port 4000 > proxy.log 2>&1 &
           for i in $(seq 60); do curl -s -o /dev/null http://localhost:4000/health/liveliness && break; sleep 3; done
           uv tool install harbor==0.20.0 --with websockets
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          sleep $(( RANDOM % 60 ))
       - name: regrade
         env: {HF_TOKEN: "${{ secrets.HF_TOKEN }}"}
         run: |
@@ -39,31 +40,29 @@ jobs:
         run: cp regrade.log proxy.log runs/ 2>/dev/null; true
       - if: always()
         uses: actions/upload-artifact@v4
-        with: {name: "regraded-${{ matrix.task }}", path: runs/, retention-days: 90, include-hidden-files: true}
+        with: {name: "nj-${{ matrix.task }}", path: runs/, retention-days: 90, include-hidden-files: true}
 
-  xmodel:
+  rerun:
     runs-on: ubuntu-latest
     timeout-minutes: 358
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 4
       matrix:
-        model: [nemotron, kimi]
-        task: [landscape-sheet-revision, backfeed-energization-reply, permission-to-operate-memo, eor-review-corrections, footing-settlement-verification, fire-test-validation-memo]
+        task: [data-hall-device-takeoff, division-26-specifications, heat-rejection-life-cycle-cost, cooling-water-flush-plan]
     steps:
       - run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - uses: actions/checkout@v4
-        with: {ref: harness-v3, path: pc, fetch-depth: 0}
+        with: {ref: main, path: pc, fetch-depth: 0}
       - uses: actions/checkout@v4
-        with: {ref: devrun-v4, path: cfg, sparse-checkout: ci}
+        with: {ref: devrun-v5, path: cfg, sparse-checkout: ci}
       - uses: astral-sh/setup-uv@v5
       - name: kit + proxy
         env: {NVIDIA_KEY: "${{ secrets.NVIDIA_KEY }}"}
         run: |
           git clone -q --depth 1 https://github.com/google-research/ple ple
           pip install -q 'litellm[proxy]'
-          C=cfg/ci/nvproxy-regrade.yaml; [ "${{ matrix.model }}" = kimi ] && C=cfg/ci/nvproxy-kimi.yaml
-          nohup litellm --config $C --host 0.0.0.0 --port 4000 > proxy.log 2>&1 &
+          nohup litellm --config cfg/ci/nvproxy-nemojudge.yaml --host 0.0.0.0 --port 4000 > proxy.log 2>&1 &
           for i in $(seq 60); do curl -s -o /dev/null http://localhost:4000/health/liveliness && break; sleep 3; done
           uv tool install harbor==0.20.0 --with websockets
           echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -73,9 +72,9 @@ jobs:
         run: |
           set -o pipefail
           printf 'MODEL_PROXY_URL=http://localhost:4000\nMODEL_PROXY_KEY=sk-local-ple-dev\nJUDGE_MODEL=kimi-k3.1-pro\nHF_TOKEN=%s\n' "$HF_TOKEN" > local.env
-          cd ple && timeout 340m uv run python eval/run.py $GITHUB_WORKSPACE/pc --tasks ${{ matrix.task }} --trials 2 --env-file $GITHUB_WORKSPACE/local.env --out $GITHUB_WORKSPACE/out/${{ matrix.task }} 2>&1 | tee $GITHUB_WORKSPACE/eval.log
+          cd ple && timeout 340m uv run python eval/run.py $GITHUB_WORKSPACE/pc --tasks ${{ matrix.task }} --trials 1 --env-file $GITHUB_WORKSPACE/local.env --out $GITHUB_WORKSPACE/out/${{ matrix.task }} 2>&1 | tee $GITHUB_WORKSPACE/eval.log
       - if: always()
         run: mkdir -p out && cp eval.log proxy.log out/ 2>/dev/null; true
       - if: always()
         uses: actions/upload-artifact@v4
-        with: {name: "x-${{ matrix.model }}-${{ matrix.task }}", path: out/, retention-days: 90, include-hidden-files: true}
+        with: {name: "v5-${{ matrix.task }}", path: out/, retention-days: 90, include-hidden-files: true}
